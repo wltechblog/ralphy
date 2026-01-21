@@ -153,7 +153,7 @@ You are in an iterative development loop. Work on task below until you can genui
 ## Instructions
 
 1. Read current state of files to understand what's been done
-2. **Update your todo list** - Use the TodoWrite tool to track progress and plan remaining work
+2. **Update your todo list** - Use the TodoWrite tool AND maintain a PROGRESS.md file to track progress and plan remaining work across iterations
 3. Make progress on task
 4. Run tests/verification if applicable
 5. When task is GENUINELY COMPLETE, output the promise tag on its own line at the very end of your response:
@@ -168,7 +168,7 @@ You are in an iterative development loop. Work on task below until you can genui
 - If stuck, try a different approach
 - Check your work before claiming completion
 - The loop will continue until you succeed
-- **IMPORTANT**: Update your todo list at the start of each iteration to show progress
+- **IMPORTANT**: Update your todo list and PROGRESS.md at the start of each iteration to show progress. PROGRESS.md ensures your status persists across iterations.
 
 ## Current Iteration: %d%s
 

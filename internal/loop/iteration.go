@@ -78,7 +78,8 @@ func RunIteration(s *state.RalphState, h *state.RalphHistory, autoCommit bool, t
 	filesModified := git.GetModifiedFilesSinceSnapshot(snapshotBefore, snapshotAfter)
 
 	combinedOutput := opencodeResult.StdoutText + "\n" + opencodeResult.StderrText
-	completionDetected := CheckCompletion(combinedOutput, s.CompletionPromise)
+	// Completion promise should only be in the AI's response (stdout)
+	completionDetected := CheckCompletion(opencodeResult.StdoutText, s.CompletionPromise)
 
 	errors := tools.ExtractErrors(combinedOutput)
 
@@ -122,7 +123,7 @@ func RunIteration(s *state.RalphState, h *state.RalphHistory, autoCommit bool, t
 		if h.StruggleIndicators.ShortIterations >= 3 {
 			fmt.Printf("   - %d very short iterations\n", h.StruggleIndicators.ShortIterations)
 		}
-		fmt.Println("   💡 Tip: Use 'ralph --add-context \"hint\"' in another terminal to guide the agent")
+		fmt.Println("   💡 Tip: Use 'ralphy --add-context \"hint\"' in another terminal to guide the agent")
 	}
 
 	if DetectPlaceholderPluginError(combinedOutput) {

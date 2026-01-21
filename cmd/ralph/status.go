@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"strings"
 	"time"
 
 	"github.com/wltechblog/ralphy/internal/state"
@@ -21,6 +23,12 @@ func printStatus() {
 	}
 
 	ctx, _ := state.LoadContext()
+	
+	progressFile := "PROGRESS.md"
+	var progress string
+	if data, err := os.ReadFile(progressFile); err == nil {
+		progress = string(data)
+	}
 
 	fmt.Println(`
 ╔══════════════════════════════════════════════════════════════════╗
@@ -46,6 +54,19 @@ func printStatus() {
 		fmt.Printf("   Prompt:       %s%s\n", preview, ellipsis(s.Prompt, 60))
 	} else {
 		fmt.Println("⏹️  No active loop")
+	}
+
+	if progress != "" {
+		fmt.Println("\n📈 AGENT PROGRESS (from PROGRESS.md):")
+		// Indent the progress lines
+		lines := strings.Split(strings.TrimSpace(progress), "\n")
+		for i, line := range lines {
+			if i > 10 {
+				fmt.Printf("   ... (%d more lines)\n", len(lines)-10)
+				break
+			}
+			fmt.Printf("   %s\n", line)
+		}
 	}
 
 	if ctx != "" {

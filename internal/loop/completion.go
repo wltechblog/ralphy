@@ -9,15 +9,22 @@ func CheckCompletion(output string, promise string) bool {
 	// 1. Remove code blocks to avoid false positives in code snippets or examples
 	cleanOutput := removeCodeBlocks(output)
 	
-	// 2. Trim whitespace from both ends
-	cleanOutput = strings.TrimSpace(cleanOutput)
-
-	// 3. Look for the promise tag at the very end of the cleaned output
+	// 2. Look for the promise tag
 	escaped := escapeRegex(promise)
-	// We use $ to ensure it's at the end of the non-code-block text
-	pattern := regexp.MustCompile(`(?i)<promise>\s*` + escaped + `\s*</promise>$`)
+	pattern := regexp.MustCompile(`(?i)<promise>\s*` + escaped + `\s*</promise>`)
 	
-	return pattern.MatchString(cleanOutput)
+	matches := pattern.FindAllStringIndex(cleanOutput, -1)
+	if len(matches) == 0 {
+		return false
+	}
+
+	// 3. Get the last occurrence and check if it's near the end
+	// AI sometimes adds closing remarks like "Done!", "I hope this helps", etc.
+	// We allow up to 250 characters of trailing text after the promise.
+	lastMatch := matches[len(matches)-1]
+	remainingText := cleanOutput[lastMatch[1]:]
+	
+	return len(strings.TrimSpace(remainingText)) < 250
 }
 
 func removeCodeBlocks(s string) string {
