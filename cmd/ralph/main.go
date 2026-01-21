@@ -26,6 +26,7 @@ func main() {
 	noPlugins := flag.Bool("no-plugins", false, "Disable non-auth OpenCode plugins")
 	noCommit := flag.Bool("no-commit", false, "Don't auto-commit after each iteration")
 	allowAll := flag.Bool("allow-all", false, "Auto-approve all tool permissions")
+	timeoutStr := flag.String("timeout", "1h", "Timeout if no activity (e.g. 1h, 30m, 0 to disable)")
 
 	flag.Usage = func() {
 		fmt.Println(`
@@ -48,6 +49,7 @@ Options:
   --no-plugins        Disable non-auth OpenCode plugins for this run
   --no-commit         Don't auto-commit after each iteration
   --allow-all         Auto-approve all tool permissions (for non-interactive use)
+  --timeout DUR       Timeout if no activity (default: 1h, 0 to disable)
   --version, -v       Show version
   --help, -h          Show this help
 
@@ -167,6 +169,16 @@ Learn more: https://ghuntley.com/ralph/
 		os.Exit(1)
 	}
 
+	timeout, err := time.ParseDuration(*timeoutStr)
+	if err != nil {
+		if *timeoutStr == "0" {
+			timeout = 0
+		} else {
+			fmt.Fprintf(os.Stderr, "Error: Invalid timeout duration: %s\n", *timeoutStr)
+			os.Exit(1)
+		}
+	}
+
 	opts := &RunOptions{
 		Prompt:              prompt,
 		PromptSource:        promptSource,
@@ -178,6 +190,7 @@ Learn more: https://ghuntley.com/ralph/
 		DisablePlugins:      *noPlugins,
 		AutoCommit:          !*noCommit,
 		AllowAllPermissions: *allowAll,
+		Timeout:             timeout,
 	}
 
 	if err := loop.RunLoop(&loop.LoopOptions{
@@ -191,6 +204,7 @@ Learn more: https://ghuntley.com/ralph/
 		DisablePlugins:      opts.DisablePlugins,
 		AutoCommit:          opts.AutoCommit,
 		AllowAllPermissions: opts.AllowAllPermissions,
+		Timeout:             opts.Timeout,
 	}); err != nil {
 		fmt.Fprintf(os.Stderr, "Fatal error: %v\n", err)
 		state.ClearState()
@@ -209,4 +223,5 @@ type RunOptions struct {
 	DisablePlugins      bool
 	AutoCommit          bool
 	AllowAllPermissions bool
+	Timeout             time.Duration
 }

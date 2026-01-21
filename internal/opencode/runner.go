@@ -15,6 +15,7 @@ type RunOpenCodeOptions struct {
 	DisablePlugins      bool
 	AllowAllPermissions bool
 	IterationStart      time.Time
+	Timeout             time.Duration
 }
 
 func RunOpenCode(opts *RunOpenCodeOptions) (*StreamResult, int, error) {
@@ -64,7 +65,7 @@ func RunOpenCode(opts *RunOpenCodeOptions) (*StreamResult, int, error) {
 
 	var result *StreamResult
 	if opts.StreamOutput {
-		result, err = StreamProcessOutput(stdout, stderr, !opts.VerboseTools, opts.IterationStart)
+		result, err = StreamProcessOutput(stdout, stderr, !opts.VerboseTools, opts.IterationStart, opts.Timeout)
 		if err != nil {
 			cmd.Process.Kill()
 			return nil, -1, err

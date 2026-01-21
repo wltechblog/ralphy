@@ -17,7 +17,7 @@ type StreamResult struct {
 	ToolCounts map[string]int
 }
 
-func StreamProcessOutput(stdout, stderr io.Reader, compactTools bool, iterationStart time.Time) (*StreamResult, error) {
+func StreamProcessOutput(stdout, stderr io.Reader, compactTools bool, iterationStart time.Time, timeout time.Duration) (*StreamResult, error) {
 	toolCounts := make(map[string]int)
 	var stdoutText, stderrText strings.Builder
 
@@ -127,6 +127,10 @@ func StreamProcessOutput(stdout, stderr io.Reader, compactTools bool, iterationS
 			return nil, err
 		case <-heartbeatTimer.C:
 			now := time.Now()
+			if timeout > 0 && now.Sub(lastActivityAt) > timeout {
+				return nil, fmt.Errorf("inactivity timeout (%v) reached", timeout)
+			}
+
 			if now.Sub(lastPrintedAt) >= heartbeatInterval {
 				elapsed := tools.FormatDuration(now.Sub(iterationStart).Milliseconds())
 				sinceActivity := tools.FormatDuration(now.Sub(lastActivityAt).Milliseconds())

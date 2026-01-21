@@ -22,6 +22,7 @@ type LoopOptions struct {
 	DisablePlugins      bool
 	AutoCommit          bool
 	AllowAllPermissions bool
+	Timeout             time.Duration
 }
 
 func RunLoop(opts *LoopOptions) error {
@@ -90,6 +91,9 @@ func RunLoop(opts *LoopOptions) error {
 	if opts.AllowAllPermissions {
 		fmt.Println("Permissions: auto-approve all tools")
 	}
+	if opts.Timeout > 0 {
+		fmt.Printf("Timeout: %v\n", opts.Timeout)
+	}
 
 	fmt.Println("")
 	fmt.Println("Starting loop... (Ctrl+C to stop)")
@@ -116,7 +120,7 @@ func RunLoop(opts *LoopOptions) error {
 			return nil
 		}
 
-		result, err := RunIteration(s, h, opts.AutoCommit)
+		result, err := RunIteration(s, h, opts.AutoCommit, opts.Timeout)
 		if err != nil {
 			fmt.Printf("\n❌ Error in iteration %d: %v\n", s.Iteration, err)
 			fmt.Println("Continuing to next iteration...")

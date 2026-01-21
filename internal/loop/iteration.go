@@ -21,7 +21,7 @@ type IterationResult struct {
 	Errors             []string
 }
 
-func RunIteration(s *state.RalphState, h *state.RalphHistory, autoCommit bool) (*IterationResult, error) {
+func RunIteration(s *state.RalphState, h *state.RalphHistory, autoCommit bool, timeout time.Duration) (*IterationResult, error) {
 	fmt.Printf("\n🔄 Iteration %d", s.Iteration)
 	if s.MaxIterations > 0 {
 		fmt.Printf(" / %d", s.MaxIterations)
@@ -50,9 +50,24 @@ func RunIteration(s *state.RalphState, h *state.RalphHistory, autoCommit bool) (
 		DisablePlugins:      false,
 		AllowAllPermissions: false,
 		IterationStart:      iterationStart,
+		Timeout:             timeout,
 	})
 
 	if err != nil {
+		if strings.Contains(err.Error(), "timeout") {
+			fmt.Printf("\n⏳ Iteration %d timed out after %v of inactivity.\n", s.Iteration, timeout)
+			state.SaveContext(fmt.Sprintf("Iteration %d timed out after %v of inactivity. Please try again or take a different approach.", s.Iteration, timeout))
+			
+			// Return a partial result to keep history happy, but marked as failure
+			return &IterationResult{
+				ExitCode:           -1,
+				CompletionDetected: false,
+				DurationMs:         time.Since(iterationStart).Milliseconds(),
+				ToolCounts:         map[string]int{},
+				FilesModified:      []string{},
+				Errors:             []string{err.Error()},
+			}, nil
+		}
 		return nil, fmt.Errorf("failed to run opencode: %w", err)
 	}
 
