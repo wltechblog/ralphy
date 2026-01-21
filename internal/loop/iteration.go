@@ -120,12 +120,26 @@ func RunIteration(s *state.RalphState, h *state.RalphHistory, autoCommit bool) (
 		fmt.Printf("\n⚠️  OpenCode exited with code %d. Continuing to next iteration.\n", exitCode)
 	}
 
+	if autoCommit {
+		message := fmt.Sprintf("Ralph iteration %d: work in progress", s.Iteration)
+		if completionDetected {
+			message = fmt.Sprintf("Ralph iteration %d: task completed", s.Iteration)
+		}
+
+		committed, err := git.AutoCommit(message)
+		if err != nil {
+			fmt.Printf("⚠️  Git auto-commit failed: %v\n", err)
+		} else if committed {
+			fmt.Println("📝 Auto-committed changes")
+		}
+	}
+
 	if completionDetected {
-		fmt.Printf("\n╔══════════════════════════════════════════════════════════════════╗")
+		fmt.Printf("\n╔══════════════════════════════════════════════════════════════════╗\n")
 		fmt.Printf("║  ✅ Completion promise detected: <promise>%s</promise>\n", s.CompletionPromise)
 		fmt.Printf("║  Task completed in %d iteration(s)\n", s.Iteration)
 		fmt.Printf("║  Total time: %s\n", tools.FormatDurationLong(h.TotalDurationMs))
-		fmt.Printf("╚══════════════════════════════════════════════════════════════════╝")
+		fmt.Printf("╚══════════════════════════════════════════════════════════════════╝\n")
 		state.ClearState()
 		state.ClearHistory()
 		state.ClearContext()
@@ -135,12 +149,6 @@ func RunIteration(s *state.RalphState, h *state.RalphHistory, autoCommit bool) (
 	if contextAtStart != "" {
 		fmt.Println("📝 Context was consumed this iteration")
 		state.ClearContext()
-	}
-
-	if autoCommit {
-		if err := git.AutoCommit(fmt.Sprintf("Ralph iteration %d: work in progress", s.Iteration)); err == nil {
-			fmt.Println("📝 Auto-committed changes")
-		}
 	}
 
 	s.Iteration++

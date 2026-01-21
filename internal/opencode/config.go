@@ -156,12 +156,14 @@ You are in an iterative development loop. Work on task below until you can genui
 2. **Update your todo list** - Use the TodoWrite tool to track progress and plan remaining work
 3. Make progress on task
 4. Run tests/verification if applicable
-5. When task is GENUINELY COMPLETE, output:
+5. When task is GENUINELY COMPLETE, output the promise tag on its own line at the very end of your response:
    <promise>%s</promise>
 
 ## Critical Rules
 
 - ONLY output <promise>%s</promise> when task is truly done
+- Output the promise tag as the ABSOLUTE LAST thing in your response
+- Do NOT mention the promise tag in your explanations or thoughts unless you are finishing
 - Do NOT lie or output false promises to exit the loop
 - If stuck, try a different approach
 - Check your work before claiming completion

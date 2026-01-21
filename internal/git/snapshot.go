@@ -89,26 +89,26 @@ func GetModifiedFilesSinceSnapshot(before *FileSnapshot, after *FileSnapshot) []
 	return changedFiles
 }
 
-func AutoCommit(message string) error {
+func AutoCommit(message string) (bool, error) {
 	statusCmd := exec.Command("git", "status", "--porcelain")
 	statusOutput, err := statusCmd.Output()
 	if err != nil {
-		return nil
+		return false, err
 	}
 
 	if strings.TrimSpace(string(statusOutput)) == "" {
-		return nil
+		return false, nil
 	}
 
 	addCmd := exec.Command("git", "add", "-A")
 	if err := addCmd.Run(); err != nil {
-		return err
+		return false, err
 	}
 
 	commitCmd := exec.Command("git", "commit", "-m", message)
 	if err := commitCmd.Run(); err != nil {
-		return err
+		return false, err
 	}
 
-	return nil
+	return true, nil
 }
