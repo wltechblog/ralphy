@@ -22,6 +22,7 @@ type LoopOptions struct {
 	DisablePlugins      bool
 	AutoCommit          bool
 	AllowAllPermissions bool
+	Verbose             bool
 	Timeout             time.Duration
 }
 
@@ -120,7 +121,12 @@ func RunLoop(opts *LoopOptions) error {
 			return nil
 		}
 
-		result, err := RunIteration(s, h, opts.AutoCommit, opts.Timeout)
+		result, err := RunIteration(s, h, opts.AutoCommit, opts.Timeout, opts.Verbose, opts.VerboseTools)
+		if err == nil {
+			h.TotalDurationMs += result.DurationMs
+			state.SaveHistory(h)
+		}
+
 		if err != nil {
 			fmt.Printf("\n❌ Error in iteration %d: %v\n", s.Iteration, err)
 			fmt.Println("Continuing to next iteration...")

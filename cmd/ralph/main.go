@@ -27,6 +27,7 @@ func main() {
 	noPlugins := flag.Bool("no-plugins", false, "Disable non-auth OpenCode plugins")
 	noCommit := flag.Bool("no-commit", false, "Don't auto-commit after each iteration")
 	allowAll := flag.Bool("allow-all", false, "Auto-approve all tool permissions")
+	verbose := flag.Bool("verbose", false, "Show more verbose output from OpenCode")
 	timeoutStr := flag.String("timeout", "1h", "Timeout if no activity (e.g. 1h, 30m, 0 to disable)")
 
 	flag.Usage = func() {
@@ -50,6 +51,7 @@ Options:
   --no-plugins        Disable non-auth OpenCode plugins for this run
   --no-commit         Don't auto-commit after each iteration
   --allow-all         Auto-approve all tool permissions (for non-interactive use)
+  --verbose           Show more verbose output from OpenCode
   --timeout DUR       Timeout if no activity (default: 1h, 0 to disable)
   --version, -v       Show version
   --help, -h          Show this help
@@ -191,6 +193,7 @@ Learn more: https://ghuntley.com/ralph/
 		DisablePlugins:      *noPlugins,
 		AutoCommit:          !*noCommit,
 		AllowAllPermissions: *allowAll,
+		Verbose:             *verbose,
 		Timeout:             timeout,
 	}
 
@@ -201,10 +204,11 @@ Learn more: https://ghuntley.com/ralph/
 		CompletionPromise:   opts.CompletionPromise,
 		Model:               opts.Model,
 		StreamOutput:        opts.StreamOutput,
-		VerboseTools:        opts.VerboseTools,
+		VerboseTools:        opts.VerboseTools || opts.Verbose,
 		DisablePlugins:      opts.DisablePlugins,
 		AutoCommit:          opts.AutoCommit,
 		AllowAllPermissions: opts.AllowAllPermissions,
+		Verbose:             opts.Verbose,
 		Timeout:             opts.Timeout,
 	}); err != nil {
 		fmt.Fprintf(os.Stderr, "Fatal error: %v\n", err)
@@ -224,5 +228,6 @@ type RunOptions struct {
 	DisablePlugins      bool
 	AutoCommit          bool
 	AllowAllPermissions bool
+	Verbose             bool
 	Timeout             time.Duration
 }

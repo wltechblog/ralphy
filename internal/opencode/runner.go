@@ -15,6 +15,7 @@ type RunOpenCodeOptions struct {
 	DisablePlugins      bool
 	AllowAllPermissions bool
 	IterationStart      time.Time
+	Verbose             bool
 	Timeout             time.Duration
 }
 
@@ -23,6 +24,10 @@ func RunOpenCode(opts *RunOpenCodeOptions) (*StreamResult, int, error) {
 
 	if opts.Model != "" {
 		args = append(args, "-m", opts.Model)
+	}
+
+	if opts.Verbose {
+		args = append(args, "--log-level", "DEBUG")
 	}
 
 	args = append(args, opts.Prompt)
@@ -42,7 +47,7 @@ func RunOpenCode(opts *RunOpenCodeOptions) (*StreamResult, int, error) {
 
 	cmd := exec.Command("opencode", args...)
 	cmd.Env = env
-	cmd.Stdin = os.Stdin
+	// cmd.Stdin = os.Stdin
 
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {

@@ -6,25 +6,31 @@ import (
 )
 
 func CheckCompletion(output string, promise string) bool {
-	// 1. Remove code blocks to avoid false positives in code snippets or examples
+	// 1. Look for the promise tag in the raw output first
+	// (AI might wrap the promise in a code block if it wraps the whole response)
+	if check(output, promise) {
+		return true
+	}
+
+	// 2. Remove code blocks and check again (standard case)
 	cleanOutput := removeCodeBlocks(output)
-	
-	// 2. Look for the promise tag
-	escaped := escapeRegex(promise)
+	return check(cleanOutput, promise)
+}
+
+func check(text string, promise string) bool {
+	escaped := regexp.QuoteMeta(promise)
 	pattern := regexp.MustCompile(`(?i)<promise>\s*` + escaped + `\s*</promise>`)
 	
-	matches := pattern.FindAllStringIndex(cleanOutput, -1)
+	matches := pattern.FindAllStringIndex(text, -1)
 	if len(matches) == 0 {
 		return false
 	}
 
-	// 3. Get the last occurrence and check if it's near the end
-	// AI sometimes adds closing remarks like "Done!", "I hope this helps", etc.
-	// We allow up to 250 characters of trailing text after the promise.
+	// Get the last occurrence and check if it's near the end
 	lastMatch := matches[len(matches)-1]
-	remainingText := cleanOutput[lastMatch[1]:]
+	remainingText := text[lastMatch[1]:]
 	
-	return len(strings.TrimSpace(remainingText)) < 250
+	return len(strings.TrimSpace(remainingText)) < 500
 }
 
 func removeCodeBlocks(s string) string {
@@ -32,26 +38,6 @@ func removeCodeBlocks(s string) string {
 	// but here we just want to ignore their content.
 	re := regexp.MustCompile("(?s)```.*?```")
 	return re.ReplaceAllString(s, "")
-}
-
-func escapeRegex(str string) string {
-	replacer := strings.NewReplacer(
-		`\`, `\\`,
-		`*`, `\*`,
-		`+`, `\+`,
-		`?`, `\?`,
-		`^`, `\^`,
-		`$`, `\$`,
-		`.`, `\.`,
-		`|`, `\|`,
-		`(`, `\(`,
-		`)`, `\)`,
-		`[`, `\[`,
-		`]`, `\]`,
-		`{`, `\{`,
-		`}`, `\}`,
-	)
-	return replacer.Replace(str)
 }
 
 func DetectPlaceholderPluginError(output string) bool {

@@ -115,14 +115,18 @@ func StreamProcessOutput(stdout, stderr io.Reader, compactTools bool, iterationS
 		done <- true
 	}()
 
+	doneCount := 0
 	for {
 		select {
 		case <-done:
-			return &StreamResult{
-				StdoutText: stdoutText.String(),
-				StderrText: stderrText.String(),
-				ToolCounts: toolCounts,
-			}, nil
+			doneCount++
+			if doneCount == 2 {
+				return &StreamResult{
+					StdoutText: stdoutText.String(),
+					StderrText: stderrText.String(),
+					ToolCounts: toolCounts,
+				}, nil
+			}
 		case err := <-errChan:
 			return nil, err
 		case <-heartbeatTimer.C:
@@ -146,7 +150,7 @@ func toolPattern(line string) string {
 	if len(stripped) < 5 {
 		return ""
 	}
-	if stripped[:2] != "| " || stripped[:2] != "|  " {
+	if stripped[:2] != "| " {
 		return ""
 	}
 	for i := 2; i < len(stripped); i++ {
