@@ -18,6 +18,11 @@ func main() {
 	addContext := flag.String("add-context", "", "Add context for next iteration")
 	flagClearContext := flag.Bool("clear-context", false, "Clear pending context")
 
+	taskPromise := flag.String("task-promise", "READY_FOR_NEXT_TASK", "Phrase that signals task completion")
+	listTasks := flag.Bool("list-tasks", false, "Display the current task list")
+	addTask := flag.String("add-task", "", "Add a new task to the list")
+	removeTask := flag.Int("remove-task", 0, "Remove task at index N")
+
 	maxIterations := flag.Int("max-iterations", 0, "Maximum iterations before stopping (default: unlimited)")
 	completionPromise := flag.String("completion-promise", "COMPLETE", "Phrase that signals completion")
 	model := flag.String("model", "", "Model to use (e.g., anthropic/claude-sonnet)")
@@ -44,6 +49,7 @@ Arguments:
 Options:
   --max-iterations N  Maximum iterations before stopping (default: unlimited)
   --completion-promise TEXT  Phrase that signals completion (default: COMPLETE)
+  --task-promise TEXT Phrase that signals task completion (default: READY_FOR_NEXT_TASK)
   --model MODEL       Model to use (e.g., anthropic/claude-sonnet)
   --prompt-file, --file, -f  Read prompt content from a file
   --no-stream         Buffer OpenCode output and print at the end
@@ -58,8 +64,12 @@ Options:
 
 Commands:
   --status            Show current ralphy loop status and history
+  --status --tasks    Show status including current task list
   --add-context TEXT  Add context for the next iteration (or edit .opencode/ralph-context.md)
   --clear-context     Clear any pending context
+  --list-tasks        Display the current task list
+  --add-task "desc"   Add a new task to the list
+  --remove-task N     Remove task at index N
 
 Examples:
   ralphy "Build a REST API for todos"
@@ -97,6 +107,56 @@ Learn more: https://ghuntley.com/ralph/
 
 	if *flagStatus {
 		printStatus()
+		os.Exit(0)
+	}
+
+	if *listTasks {
+		tasks, _, err := state.LoadTasks()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error loading tasks: %v\n", err)
+			os.Exit(1)
+		}
+		if len(tasks) == 0 {
+			fmt.Println("No tasks found. Use --add-task to create your first task.")
+			os.Exit(0)
+		}
+		fmt.Println("Current tasks:")
+		for i, task := range tasks {
+			statusIcon := "⏸️"
+			if task.Status == "complete" {
+				statusIcon = "✅"
+			} else if task.Status == "in-progress" {
+				statusIcon = "🔄"
+			}
+			fmt.Printf("%d. %s %s\n", i+1, statusIcon, task.Text)
+			for _, sub := range task.Subtasks {
+				subIcon := "⏸️"
+				if sub.Status == "complete" {
+					subIcon = "✅"
+				} else if sub.Status == "in-progress" {
+					subIcon = "🔄"
+				}
+				fmt.Printf("   %s %s\n", subIcon, sub.Text)
+			}
+		}
+		os.Exit(0)
+	}
+
+	if *addTask != "" {
+		if err := state.AddTask(*addTask); err != nil {
+			fmt.Fprintf(os.Stderr, "Error adding task: %v\n", err)
+			os.Exit(1)
+		}
+		fmt.Printf("✅ Task added: \"%s\"\n", *addTask)
+		os.Exit(0)
+	}
+
+	if *removeTask > 0 {
+		if err := state.RemoveTask(*removeTask); err != nil {
+			fmt.Fprintf(os.Stderr, "Error removing task: %v\n", err)
+			os.Exit(1)
+		}
+		fmt.Printf("✅ Removed task %d and its subtasks\n", *removeTask)
 		os.Exit(0)
 	}
 
@@ -187,6 +247,7 @@ Learn more: https://ghuntley.com/ralph/
 		PromptSource:        promptSource,
 		MaxIterations:       *maxIterations,
 		CompletionPromise:   *completionPromise,
+		TaskPromise:         *taskPromise,
 		Model:               *model,
 		StreamOutput:        !*noStream,
 		VerboseTools:        *verboseTools,
@@ -202,6 +263,7 @@ Learn more: https://ghuntley.com/ralph/
 		PromptSource:        opts.PromptSource,
 		MaxIterations:       opts.MaxIterations,
 		CompletionPromise:   opts.CompletionPromise,
+		TaskPromise:         opts.TaskPromise,
 		Model:               opts.Model,
 		StreamOutput:        opts.StreamOutput,
 		VerboseTools:        opts.VerboseTools || opts.Verbose,
@@ -222,6 +284,7 @@ type RunOptions struct {
 	PromptSource        string
 	MaxIterations       int
 	CompletionPromise   string
+	TaskPromise         string
 	Model               string
 	StreamOutput        bool
 	VerboseTools        bool

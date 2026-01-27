@@ -13,12 +13,13 @@ import (
 )
 
 type IterationResult struct {
-	ExitCode           int
-	CompletionDetected bool
-	DurationMs         int64
-	ToolCounts         map[string]int
-	FilesModified      []string
-	Errors             []string
+	ExitCode               int
+	CompletionDetected     bool
+	TaskCompletionDetected bool
+	DurationMs             int64
+	ToolCounts             map[string]int
+	FilesModified          []string
+	Errors                 []string
 }
 
 func RunIteration(s *state.RalphState, h *state.RalphHistory, autoCommit bool, timeout time.Duration, verbose bool, verboseTools bool) (*IterationResult, error) {
@@ -81,19 +82,21 @@ func RunIteration(s *state.RalphState, h *state.RalphHistory, autoCommit bool, t
 	combinedOutput := opencodeResult.StdoutText + "\n" + opencodeResult.StderrText
 	// Completion promise should only be in the AI's response (stdout)
 	completionDetected := CheckCompletion(opencodeResult.StdoutText, s.CompletionPromise)
+	taskCompletionDetected := CheckCompletion(opencodeResult.StdoutText, s.TaskPromise)
 
 	errors := tools.ExtractErrors(combinedOutput)
 
 	result = &IterationResult{
-		ExitCode:           exitCode,
-		CompletionDetected: completionDetected,
-		DurationMs:         iterationDuration.Milliseconds(),
-		ToolCounts:         opencodeResult.ToolCounts,
-		FilesModified:      filesModified,
-		Errors:             errors,
+		ExitCode:               exitCode,
+		CompletionDetected:     completionDetected,
+		TaskCompletionDetected: taskCompletionDetected,
+		DurationMs:             iterationDuration.Milliseconds(),
+		ToolCounts:             opencodeResult.ToolCounts,
+		FilesModified:          filesModified,
+		Errors:                 errors,
 	}
 
-	printIterationSummary(s.Iteration, iterationDuration.Milliseconds(), opencodeResult.ToolCounts, exitCode, completionDetected)
+	printIterationSummary(s.Iteration, iterationDuration.Milliseconds(), opencodeResult.ToolCounts, exitCode, completionDetected, taskCompletionDetected, s.TaskPromise)
 
 	state.AddIteration(h, &state.IterationHistory{
 		Iteration:          s.Iteration,
@@ -151,6 +154,10 @@ func RunIteration(s *state.RalphState, h *state.RalphHistory, autoCommit bool, t
 		}
 	}
 
+	if taskCompletionDetected && !completionDetected {
+		fmt.Printf("\n🔄 Task completion detected: <promise>%s</promise>\n", s.TaskPromise)
+	}
+
 	if completionDetected {
 		fmt.Printf("\n╔══════════════════════════════════════════════════════════════════╗\n")
 		fmt.Printf("║  ✅ Completion promise detected: <promise>%s</promise>\n", s.CompletionPromise)
@@ -176,7 +183,7 @@ func RunIteration(s *state.RalphState, h *state.RalphHistory, autoCommit bool, t
 	return result, nil
 }
 
-func printIterationSummary(iteration int, elapsedMs int64, toolCounts map[string]int, exitCode int, completionDetected bool) {
+func printIterationSummary(iteration int, elapsedMs int64, toolCounts map[string]int, exitCode int, completionDetected bool, taskCompletionDetected bool, taskPromise string) {
 	fmt.Println("\nIteration Summary")
 	fmt.Println("────────────────────────────────────────────────────────────────────")
 	fmt.Printf("Iteration: %d\n", iteration)
@@ -190,5 +197,6 @@ func printIterationSummary(iteration int, elapsedMs int64, toolCounts map[string
 	}
 
 	fmt.Printf("Exit code: %d\n", exitCode)
+	fmt.Printf("Task promise: %t\n", taskCompletionDetected)
 	fmt.Printf("Completion promise: %t\n", completionDetected)
 }

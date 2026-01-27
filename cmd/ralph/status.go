@@ -35,7 +35,7 @@ func printStatus() {
 ║                    Ralph Wiggum Status                           ║
 ╚══════════════════════════════════════════════════════════════════╝`)
 
-	if s.Active {
+	if s != nil && s.Active {
 		startedAt, _ := time.Parse(time.RFC3339, s.StartedAt)
 		elapsed := time.Since(startedAt)
 		fmt.Println("🔄 ACTIVE LOOP")
@@ -47,6 +47,7 @@ func printStatus() {
 		fmt.Printf("   Started:      %s\n", s.StartedAt)
 		fmt.Printf("   Elapsed:      %s\n", tools.FormatDurationLong(elapsed.Milliseconds()))
 		fmt.Printf("   Promise:      %s\n", s.CompletionPromise)
+		fmt.Printf("   Task Promise: %s\n", s.TaskPromise)
 		if s.Model != "" {
 			fmt.Printf("   Model:        %s\n", s.Model)
 		}
@@ -54,6 +55,41 @@ func printStatus() {
 		fmt.Printf("   Prompt:       %s%s\n", preview, ellipsis(s.Prompt, 60))
 	} else {
 		fmt.Println("⏹️  No active loop")
+	}
+
+	tasks, _, err := state.LoadTasks()
+	if err == nil && len(tasks) > 0 {
+		fmt.Println("\n📋 CURRENT TASKS:")
+		for i, task := range tasks {
+			statusIcon := "⏸️"
+			if task.Status == "complete" {
+				statusIcon = "✅"
+			} else if task.Status == "in-progress" {
+				statusIcon = "🔄"
+			}
+			fmt.Printf("   %d. %s %s\n", i+1, statusIcon, task.Text)
+
+			for _, subtask := range task.Subtasks {
+				subStatusIcon := "⏸️"
+				if subtask.Status == "complete" {
+					subStatusIcon = "✅"
+				} else if subtask.Status == "in-progress" {
+					subStatusIcon = "🔄"
+				}
+				fmt.Printf("      %s %s\n", subStatusIcon, subtask.Text)
+			}
+		}
+		
+		completeCount := 0
+		inProgressCount := 0
+		for _, t := range tasks {
+			if t.Status == "complete" {
+				completeCount++
+			} else if t.Status == "in-progress" {
+				inProgressCount++
+			}
+		}
+		fmt.Printf("\n   Progress: %d/%d complete, %d in progress\n", completeCount, len(tasks), inProgressCount)
 	}
 
 	if progress != "" {

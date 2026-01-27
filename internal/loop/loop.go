@@ -16,6 +16,7 @@ type LoopOptions struct {
 	PromptSource        string
 	MaxIterations       int
 	CompletionPromise   string
+	TaskPromise         string
 	Model               string
 	StreamOutput        bool
 	VerboseTools        bool
@@ -44,6 +45,7 @@ func RunLoop(opts *LoopOptions) error {
 		Iteration:         1,
 		MaxIterations:     opts.MaxIterations,
 		CompletionPromise: opts.CompletionPromise,
+		TaskPromise:       opts.TaskPromise,
 		Prompt:            opts.Prompt,
 		StartedAt:         time.Now().Format(time.RFC3339),
 		Model:             opts.Model,

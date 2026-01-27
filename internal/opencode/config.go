@@ -128,7 +128,7 @@ type ConfigOptions struct {
 	AllowAllPermissions bool
 }
 
-func BuildPrompt(state *state.RalphState, context string) string {
+func BuildPrompt(s *state.RalphState, context string) string {
 	var contextSection strings.Builder
 
 	if context != "" {
@@ -143,45 +143,37 @@ func BuildPrompt(state *state.RalphState, context string) string {
 `)
 	}
 
+	tasksSection := state.GetTasksModeSection(s)
 	prompt := fmt.Sprintf(`# Ralph Wiggum Loop - Iteration %d
 
-You are in an iterative development loop. Work on task below until you can genuinely complete it.
-%s## Your Task
+You are in an iterative development loop working through a task list.
+%s%s
+## Your Main Goal
 
 %s
 
-## Instructions
-
-1. Read current state of files to understand what's been done
-2. **Update your todo list** - Use the TodoWrite tool AND maintain a PROGRESS.md file to track progress and plan remaining work across iterations
-3. Make progress on task
-4. Run tests/verification if applicable
-5. When task is GENUINELY COMPLETE, output the promise tag on its own line at the very end of your response:
-   <promise>%s</promise>
-
 ## Critical Rules
 
-- ONLY output <promise>%s</promise> when task is truly done
-- Output the promise tag as the ABSOLUTE LAST thing in your response
-- Do NOT mention the promise tag in your explanations or thoughts unless you are finishing
+- **Update your todo list and PROGRESS.md at the start of each iteration** to show progress. PROGRESS.md ensures your status persists across iterations.
+- Work on ONE task at a time from .opencode/ralph-tasks.md
+- ONLY output <promise>%s</promise> when the current task is complete and marked in ralph-tasks.md
+- ONLY output <promise>%s</promise> when ALL tasks are truly done
 - Do NOT lie or output false promises to exit the loop
 - If stuck, try a different approach
 - Check your work before claiming completion
-- The loop will continue until you succeed
-- **IMPORTANT**: Update your todo list and PROGRESS.md at the start of each iteration to show progress. PROGRESS.md ensures your status persists across iterations.
 
 ## Current Iteration: %d%s
 
-Now, work on the task. Good luck!`,
-		state.Iteration,
+Now, work on the current task. Good luck!`,
+		s.Iteration,
 		contextSection.String(),
-		state.Prompt,
-		state.CompletionPromise,
-		state.CompletionPromise,
-		state.Iteration,
-		formatMaxIterations(state.MaxIterations),
+		tasksSection,
+		s.Prompt,
+		s.TaskPromise,
+		s.CompletionPromise,
+		s.Iteration,
+		formatMaxIterations(s.MaxIterations),
 	)
-
 	return strings.TrimSpace(prompt)
 }
 

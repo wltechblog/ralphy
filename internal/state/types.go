@@ -6,6 +6,7 @@ const (
 	stateFileName   = "ralph-loop.state.json"
 	historyFileName = "ralph-history.json"
 	contextFileName = "ralph-context.md"
+	tasksFileName   = "ralph-tasks.md"
 )
 
 type RalphState struct {
@@ -13,6 +14,7 @@ type RalphState struct {
 	Iteration         int    `json:"iteration"`
 	MaxIterations     int    `json:"maxIterations"`
 	CompletionPromise string `json:"completionPromise"`
+	TaskPromise       string `json:"taskPromise"`
 	Prompt            string `json:"prompt"`
 	StartedAt         string `json:"startedAt"`
 	Model             string `json:"model"`
