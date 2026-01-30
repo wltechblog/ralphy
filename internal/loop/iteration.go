@@ -22,7 +22,7 @@ type IterationResult struct {
 	Errors                 []string
 }
 
-func RunIteration(s *state.RalphState, h *state.RalphHistory, autoCommit bool, timeout time.Duration, verbose bool, verboseTools bool) (*IterationResult, error) {
+func RunIteration(s *state.RalphState, h *state.RalphHistory, autoCommit bool, timeout time.Duration, verbose bool, verboseTools bool, allowAllPermissions bool) (*IterationResult, error) {
 	fmt.Printf("\n🔄 Iteration %d", s.Iteration)
 	if s.MaxIterations > 0 {
 		fmt.Printf(" / %d", s.MaxIterations)
@@ -49,7 +49,7 @@ func RunIteration(s *state.RalphState, h *state.RalphHistory, autoCommit bool, t
 		StreamOutput:        true,
 		VerboseTools:        verboseTools,
 		DisablePlugins:      false,
-		AllowAllPermissions: false,
+		AllowAllPermissions: allowAllPermissions,
 		IterationStart:      iterationStart,
 		Verbose:             verbose,
 		Timeout:             timeout,

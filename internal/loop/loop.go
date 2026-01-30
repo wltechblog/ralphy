@@ -123,7 +123,7 @@ func RunLoop(opts *LoopOptions) error {
 			return nil
 		}
 
-		result, err := RunIteration(s, h, opts.AutoCommit, opts.Timeout, opts.Verbose, opts.VerboseTools)
+		result, err := RunIteration(s, h, opts.AutoCommit, opts.Timeout, opts.Verbose, opts.VerboseTools, opts.AllowAllPermissions)
 		if err == nil {
 			h.TotalDurationMs += result.DurationMs
 			state.SaveHistory(h)

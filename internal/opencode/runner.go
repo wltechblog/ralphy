@@ -47,7 +47,7 @@ func RunOpenCode(opts *RunOpenCodeOptions) (*StreamResult, int, error) {
 
 	cmd := exec.Command("opencode", args...)
 	cmd.Env = env
-	// cmd.Stdin = os.Stdin
+	cmd.Stdin = os.Stdin
 
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {

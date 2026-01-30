@@ -94,6 +94,7 @@ func ensureRalphConfig(options *ConfigOptions) (string, error) {
 	if options.AllowAllPermissions {
 		config["permission"] = map[string]string{
 			"read":               "allow",
+			"write":              "allow",
 			"edit":               "allow",
 			"glob":               "allow",
 			"grep":               "allow",
@@ -108,6 +109,15 @@ func ensureRalphConfig(options *ConfigOptions) (string, error) {
 			"question":           "allow",
 			"lsp":                "allow",
 			"external_directory": "allow",
+			"mkdir":              "allow",
+			"rm":                 "allow",
+			"mv":                 "allow",
+			"ls":                 "allow",
+			"cat":                "allow",
+			"browser":            "allow",
+			"screenshot":         "allow",
+			"axetree":            "allow",
+			"test":               "allow",
 		}
 	}
 
